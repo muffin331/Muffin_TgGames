@@ -2,39 +2,134 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Muffin Game - Muffin Fly</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Muffin Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { margin: 0; padding: 0; font-family: sans-serif; background-color: #1a0f2e; color: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 400px; padding: 20px; box-sizing: border-box; text-align: center; }
-        h1 { color: #ff9d00; text-transform: uppercase; }
-        .balance-card { background: #2d1b4e; border-radius: 20px; padding: 15px; margin: 20px 0; border: 2px solid rgba(255, 157, 0, 0.3); }
-        .balance-value { font-size: 32px; font-weight: bold; color: #ff9d00; }
-        .muffin-rocket { font-size: 80px; animation: fly 2.5s ease-in-out infinite; margin: 20px 0; }
-        @keyframes fly { 0%, 100% { transform: translateY(0px) rotate(-5deg); } 50% { transform: translateY(-20px) rotate(5deg); } }
-        .btn { background: linear-gradient(135deg, #e056fd, #686de0); color: white; border: none; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: bold; width: 100%; margin-top: 10px; cursor: pointer; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: #0f1020; color: #fff; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; background: #1a1b35; padding: 12px 16px; border-radius: 16px; margin-bottom: 15px; border: 1px solid #2d2f5a; }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-icon { font-size: 24px; }
+        .title { font-size: 16px; font-weight: bold; color: #fff; }
+        .subtitle { font-size: 11px; color: #a0a3c4; }
+        .balance-badge { background: #262852; padding: 6px 12px; border-radius: 12px; font-weight: bold; color: #ffcc00; font-size: 14px; border: 1px solid #3f4285; }
+        
+        .card { width: 100%; max-width: 400px; background: #1a1b35; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid #2d2f5a; text-align: center; }
+        .game-screen { background: linear-gradient(135deg, #131429 0%, #221a3a 100%); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #4a2e6b; position: relative; overflow: hidden; }
+        .multiplier { font-size: 38px; font-weight: 900; color: #00ffcc; margin: 10px 0; text-shadow: 0 0 15px rgba(0,255,204,0.4); }
+        .status-text { font-size: 13px; color: #ff5577; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .rocket-line { width: 100%; height: 120px; border-left: 2px dashed #4a2e6b; border-bottom: 2px solid #4a2e6b; position: relative; margin: 10px 0; }
+        .flying-rocket { position: absolute; left: 20%; bottom: 20%; font-size: 28px; transition: transform 0.3s; }
+
+        .btn { width: 100%; background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); color: white; border: none; padding: 14px; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(108,92,231,0.4); transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        
+        .input-group { display: flex; gap: 10px; margin: 12px 0; }
+        input { flex: 1; background: #131429; border: 1px solid #3f4285; padding: 12px; border-radius: 12px; color: white; font-size: 15px; outline: none; }
+        input:focus { border-color: #6c5ce7; }
+        
+        .history-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px; }
+        .history-item { background: #131429; padding: 6px; border-radius: 8px; font-size: 11px; font-weight: bold; text-align: center; border: 1px solid #2d2f5a; }
+        .history-item.win { color: #00ffcc; border-color: #00ffcc44; }
+        .history-item.lose { color: #ff5577; border-color: #ff557744; }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>🧁 MUFFIN FLY</h1>
-    <div class="balance-card">
-        <div>Твои монеты</div>
-        <div class="balance-value" id="balance">100 MUFFIN</div>
+
+    <div class="header">
+        <div class="logo-area">
+            <span class="logo-icon">🧁</span>
+            <div>
+                <div class="title">MUFFIN GAME</div>
+                <div class="subtitle">SPACE ARCADE</div>
+            </div>
+        </div>
+        <div class="balance-badge" id="balance">63 🪙</div>
     </div>
-    <div class="muffin-rocket">🧁🚀</div>
-    <button class="btn" onclick="launchMuffin()">🚀 Запустить Muffin Fly (+10)</button>
-</div>
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    let balance = 100;
-    function launchMuffin() {
-        balance += 10;
-        document.getElementById('balance').innerText = balance + ' MUFFIN';
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-    }
-</script>
+
+    <div class="card game-screen">
+        <div style="font-size: 12px; color: #a0a3c4;">ПОЛЕТ РАКЕТЫ-КЕКСА</div>
+        <div class="multiplier" id="multiplier">1.00x</div>
+        <div class="status-text" id="status">ОЖИДАНИЕ СТАВКИ</div>
+        
+        <div class="rocket-line">
+            <div class="flying-rocket" id="rocket">🧁🚀</div>
+        </div>
+
+        <div class="input-group">
+            <input type="number" id="betInput" value="10" min="1" max="1000">
+            <button class="btn" id="playBtn" onclick="startFlight()" style="padding: 10px 20px;">СТАРТ</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="font-size: 13px; color: #a0a3c4; margin-bottom: 8px;">ПОСЛЕДНИЕ РАУНДЫ</div>
+        <div class="history-grid" id="history">
+            <div class="history-item win">3.90x</div>
+            <div class="history-item lose">1.10x</div>
+            <div class="history-item win">4.54x</div>
+            <div class="history-item lose">1.23x</div>
+            <div class="history-item win">2.26x</div>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let balance = 63;
+        let isPlaying = false;
+
+        function updateBalance() {
+            document.getElementById('balance').innerText = balance + ' 🪙';
+        }
+
+        function startFlight() {
+            if (isPlaying) return;
+            let bet = parseInt(document.getElementById('betInput').value);
+            if (isNaN(bet) || bet <= 0) {
+                alert('Введите корректную ставку!');
+                return;
+            }
+            if (bet > balance) {
+                alert('Недостаточно монет на балансе!');
+                return;
+            }
+
+            balance -= bet;
+            updateBalance();
+            isPlaying = true;
+
+            let btn = document.getElementById('playBtn');
+            let status = document.getElementById('status');
+            let multEl = document.getElementById('multiplier');
+            let rocket = document.getElementById('rocket');
+
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            status.innerText = 'ПОЛЕТ ИДЕТ...';
+            status.style.color = '#00ffcc';
+
+            let currentMult = 1.00;
+            let crashAt = (Math.random() * 3 + 1.2).toFixed(2); // Рандомный краш
+
+            let timer = setInterval(() => {
+                currentMult += 0.05;
+                multEl.innerText = currentMult.toFixed(2) + 'x';
+                rocket.style.transform = `translate(${Math.min(currentMult * 20, 150)}px, -${Math.min(currentMult * 15, 60)}px)`;
+
+                if (currentMult >= crashAt) {
+                    clearInterval(timer);
+                    status.innerText = 'РАКЕТА РАЗБИЛАСЬ';
+                    status.style.color = '#ff5577';
+                    isPlaying = false;
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            }, 100);
+        }
+    </script>
 </body>
 </html>
