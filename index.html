@@ -152,3 +152,25 @@
     }
   }
 </script>
+<button onclick="claimCoins()">Забрать монеты</button>
+
+<script>
+  function claimCoins() {
+    // Переменная со счетом игрока в игре (например, текущий выигрыш)
+    let earnedAmount = 150; 
+
+    // Проверяем, что игра запущена внутри Telegram
+    if (window.Telegram && window.Telegram.WebApp) {
+      // Отправляем данные боту в формате JSON
+      window.Telegram.WebApp.sendData(JSON.stringify({
+        action: "cash_out",
+        amount: earnedAmount
+      }));
+      
+      // Закрываем мини-приложение после нажатия
+      window.Telegram.WebApp.close();
+    } else {
+      alert("Открой игру через Telegram-бота!");
+    }
+  }
+</script>
