@@ -133,3 +133,22 @@
     </script>
 </body>
 </html>
+<!-- Пример кнопки в HTML -->
+<button onclick="claimCoins()">Забрать монеты</button>
+
+<script>
+  function claimCoins() {
+    // Здесь укажи переменную, в которой хранится твой заработанный счет (икс/монеты)
+    let earnedAmount = 100; // Пример: 100 монет
+
+    if (window.Telegram && window.Telegram.WebApp) {
+      // Отправляем данные боту и закрываем Mini App
+      Telegram.WebApp.sendData(JSON.stringify({
+        action: "claim_win",
+        amount: earnedAmount
+      }));
+    } else {
+      alert("Открой игру через Telegram, чтобы забрать награду!");
+    }
+  }
+</script>
