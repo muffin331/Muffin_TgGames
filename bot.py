@@ -1,0 +1,85 @@
+import asyncio
+import logging
+from aiogram import Bot, Dispatcher, F, types
+from aiogram.filters import Command
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, LabeledPrice, PreCheckoutQuery
+
+TOKEN = "9055119041:AAFRUIlISUHTM0XNUU-JY9Bws2MCwFPZ14M"
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+def get_main_keyboard():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🧁 Играть в Muffin Game", web_app=types.WebAppInfo(url="https://muffin331.github.io/Muffin_TgGames/"))],
+        [InlineKeyboardButton(text="⭐ Купить монеты", callback_data="buy_coins"), InlineKeyboardButton(text="🎁 Кейсы с подарками", callback_data="cases")],
+        [InlineKeyboardButton(text="🎟 Ввести промокод", callback_data="promocode")]
+    ])
+
+@dp.message(Command("start"))
+async def cmd_start(message: types.Message):
+    await message.answer(
+        "💚 **Muffin Game** — твоя удача начинается здесь!\n\nВыбирай разделы ниже:",
+        reply_markup=get_main_keyboard(),
+        parse_mode="Markdown"
+    )
+
+@dp.callback_query(F.data == "buy_coins")
+async def buy_coins_menu(callback: types.CallbackQuery):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="100 монет — 1 ⭐", callback_data="star_100")],
+        [InlineKeyboardButton(text="500 монет — 5 ⭐", callback_data="star_500")],
+        [InlineKeyboardButton(text="1000 монет — 10 ⭐", callback_data="star_1000")],
+        [InlineKeyboardButton(text="« Назад", callback_data="back_home")]
+    ])
+    await callback.message.edit_text("💰 **Покупка монет**\nВыбери пакет для игры:", reply_markup=keyboard, parse_mode="Markdown")
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("star_"))
+async def process_star_purchase(callback: types.CallbackQuery):
+    amount = callback.data.split("_")[1]
+    prices = {"100": (1, "100 монет Muffin"), "500": (5, "500 монет Muffin"), "1000": (10, "1000 монет Muffin")}
+    stars, title = prices[amount]
+    await bot.send_invoice(
+        chat_id=callback.from_user.id,
+        title=title,
+        description="Пополнение игрового баланса Muffin Game",
+        payload=f"coins_{amount}",
+        currency="XTR",
+        prices=[LabeledPrice(label="Монеты", amount=stars)]
+    )
+    await callback.answer()
+
+@dp.pre_checkout_query()
+async def pre_checkout(pre_checkout_query: PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+@dp.message(F.successful_payment)
+async def successful_payment(message: types.Message):
+    await message.answer("✅ Успешно! Монеты зачислены на твой баланс в Muffin Game.")
+
+@dp.callback_query(F.data == "cases")
+async def cases_menu(callback: types.CallbackQuery):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📦 Кейс за 1 ⭐", callback_data="case_1")],
+        [InlineKeyboardButton(text="📦 Кейс за 5 ⭐", callback_data="case_5")],
+        [InlineKeyboardButton(text="« Назад", callback_data="back_home")]
+    ])
+    await callback.message.edit_text("🎁 **Кейсы с подарками**\nВозможный приз: сердечко, роза или тортик Telegram!", reply_markup=keyboard, parse_mode="Markdown")
+    await callback.answer()
+
+@dp.callback_query(F.data == "back_home")
+async def back_home(callback: types.CallbackQuery):
+    await callback.message.edit_text("💚 **Muffin Game** — твоя удача начинается здесь!\n\nВыбирай разделы ниже:", reply_markup=get_main_keyboard(), parse_mode="Markdown")
+    await callback.answer()
+
+@dp.callback_query(F.data == "promocode")
+async def promocode_info(callback: types.CallbackQuery):
+    await callback.answer("Отправь промокод текстовым сообщением в чат!", show_alert=True)
+
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    asyncio.run(main())
