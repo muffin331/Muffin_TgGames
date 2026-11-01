@@ -138,3 +138,44 @@ async def admin_give_coins(message: types.Message):
         await bot.send_message(target_user_id, f"🎁 Администратор выдал тебе `{amount}` монет!")
     except Exception:
         pass
+# Словарь для хранения промокодов (в памяти) или можешь сохранять их в базу данных
+PROMO_CODES = {
+    "START2026": 500,  # промокод: количество монет
+    "BONUS": 1000
+}
+
+# Активация промокода игроком
+@dp.message(Command("promo"))
+async def activate_promo(message: types.Message):
+    args = message.text.split()
+    if len(args) < 2:
+        await message.answer("⚠️ Введи промокод. Пример: `/promo START2026`")
+        return
+    
+    code = args[1].upper()
+    
+    if code in PROMO_CODES:
+        amount = PROMO_CODES[code]
+        # Здесь добавь сохранение / зачисление монет в базу данных игроку message.from_user.id
+        await message.answer(f"🎉 Промокод активирован! Тебе начислено `{amount}` монет.")
+    else:
+        await message.answer("❌ Неверный или уже истекший промокод.")
+
+# Команда для тебя (админа), чтобы добавлять новые промокоды на лету
+@dp.message(Command("addpromo"))
+async def admin_add_promo(message: types.Message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    
+    args = message.text.split()
+    if len(args) < 3:
+        await message.answer("⚠️ Использование: `/addpromo [КОД] [сумма]`")
+        return
+    
+    code = args[1].upper()
+    try:
+        amount = int(args[2])
+        PROMO_CODES[code] = amount
+        await message.answer(f"✅ Промокод `{code}` на `{amount}` монет успешно создан!")
+    except ValueError:
+        await message.answer("⚠️ Сумма должна быть числом.")
