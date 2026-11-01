@@ -83,3 +83,58 @@ async def main():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     asyncio.run(main())
+import json
+from aiogram.filters import Command
+from aiogram import types, F
+
+# Твой личный ID администратора
+ADMIN_ID = 1116150221
+
+# Обработка нажатия кнопки "Забрать" в Mini App
+@dp.message(F.web_app_data)
+async def receive_web_app_data(message: types.Message):
+    try:
+        data = json.loads(message.web_app_data.data)
+        if data.get("action") == "claim_win":
+            amount = data.get("amount", 0)
+            
+            # Здесь будет сохранение монет в базу данных для message.from_user.id
+            
+            await message.answer(f"🎉 Успешно! Ты забрал `{amount}` монет на свой баланс!")
+    except Exception:
+        await message.answer("⚠️ Ошибка при обработке наград из игры.")
+
+# Открытие админ-панели (только для тебя)
+@dp.message(Command("admin"))
+async def admin_panel(message: types.Message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    
+    await message.answer(
+        "👑 **Админ-панель Muffin Game**\n\n"
+        "Команда для выдачи монет:\n"
+        "`/give [ID_игрока] [сумма]`"
+    )
+
+# Выдача монет игроку через команду /give
+@dp.message(Command("give"))
+async def admin_give_coins(message: types.Message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    
+    args = message.text.split()
+    if len(args) < 3:
+        await message.answer("⚠️ Пример использования: `/give 123456789 500`")
+        return
+    
+    target_user_id = args[1]
+    amount = args[2]
+    
+    # Здесь логика начисления монет игроку в базу данных
+    
+    await message.answer(f"✅ Успешно! Игроку `{target_user_id}` начислено `{amount}` монет.")
+    
+    try:
+        await bot.send_message(target_user_id, f"🎁 Администратор выдал тебе `{amount}` монет!")
+    except Exception:
+        pass
