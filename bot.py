@@ -197,3 +197,20 @@ async def admin_panel(message: types.Message):
         "Команда для выдачи монет:\n"
         "`/give [ID_игрока] [сумма]`"
     )
+import json
+from aiogram import types, F
+
+@dp.message(F.web_app_data)
+async def receive_web_app_data(message: types.Message):
+    try:
+        # Получаем данные из игры
+        data = json.loads(message.web_app_data.data)
+        
+        if data.get("action") == "cash_out":
+            amount = data.get("amount", 0)
+            
+            # Здесь бот отвечает игроку
+            await message.answer(f"🚀 Успешно! Ты забрал выигрыш и получил `{amount}` монет!")
+            
+    except Exception as e:
+        await message.answer("⚠️ Ошибка при зачислении выигрыша.")
