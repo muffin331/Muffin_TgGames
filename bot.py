@@ -179,3 +179,21 @@ async def admin_add_promo(message: types.Message):
         await message.answer(f"✅ Промокод `{code}` на `{amount}` монет успешно создан!")
     except ValueError:
         await message.answer("⚠️ Сумма должна быть числом.")
+from aiogram.filters import Command
+from aiogram import types, F
+import json
+
+ADMIN_ID = 1116150221  # Твой точный ID числом без кавычек
+
+@dp.message(Command("admin"))
+async def admin_panel(message: types.Message):
+    # Проверка ID
+    if message.from_user.id != ADMIN_ID:
+        await message.answer("❌ У тебя нет доступа к админ-панели.")
+        return
+    
+    await message.answer(
+        "👑 **Админ-панель Muffin Game**\n\n"
+        "Команда для выдачи монет:\n"
+        "`/give [ID_игрока] [сумма]`"
+    )
